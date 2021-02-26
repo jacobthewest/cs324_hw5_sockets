@@ -79,33 +79,56 @@ int main(int argc, char *argv[]) {
 
 	freeaddrinfo(result);           /* No longer needed */
 
-	/* Send remaining command-line arguments as separate
-	   datagrams, and read responses from server */
+    // ----- START PART THREE CODE ----- //
 
-	for (j = hostindex + 2; j < argc; j++) {
-		len = strlen(argv[j]) + 1;
-		/* +1 for terminating null byte */
+    // reads (using fread()) input from stdin into a buffer (char []) until EOF is reached (max total bytes 4096);
+    // makes note of how many bytes were received from stdin and stored in the buffer
+    fprintf(stdout, "Made it here");
+    fflush(stdout);
+    int MAX_TOTAL_BYTES = 4096;
+    char buffer[BUF_SIZE];
+    int numBytesToWrite;
+    if((numBytesToWrite = fread(buffer, sizeof(char), MAX_TOTAL_BYTES, stdin)) < 0) {
+		fprintf(stderr, "Could not fread() from stdin\n");
+		exit(EXIT_FAILURE);
+    }
 
-		if (len + 1 > BUF_SIZE) {
-			fprintf(stderr,
-					"Ignoring long message in argument %d\n", j);
-			continue;
-		}
+    int BYTES_COUNT = 4; // Idk, I just picked a number that seemed manageable.
+    int bytesWritten = 0;
+    while(bytesWritten < numBytesToWrite) {
+        bytesWritten += write(sfd, (buffer + bytesWritten), BYTES_COUNT);
+    }
 
-		if (write(sfd, argv[j], len) != len) {  
-			fprintf(stderr, "partial/failed write\n");
-			exit(EXIT_FAILURE);
-		}
-		printf("Sent %ld bytes to server\n", len);
+    // ----- END PART THREE CODE ----- //
 
-		// nread = read(sfd, buf, BUF_SIZE); // COMMENTED OUT FOR INSTRUCTIONS AT END OF NUMBER 11
-		// if (nread == -1) {
-		// 	perror("read");
-		// 	exit(EXIT_FAILURE);
-		// }
 
-		// printf("Received %zd bytes: %s\n", nread, buf);
-	}
+	// /* Send remaining command-line arguments as separate
+	//    datagrams, and read responses from server */
+
+	// for (j = hostindex + 2; j < argc; j++) {
+	// 	len = strlen(argv[j]) + 1;
+	// 	/* +1 for terminating null byte */
+
+	// 	if (len + 1 > BUF_SIZE) {
+	// 		fprintf(stderr,
+	// 				"Ignoring long message in argument %d\n", j);
+	// 		continue;
+	// 	}
+
+	// 	if (write(sfd, argv[j], len) != len) {  
+	// 		fprintf(stderr, "partial/failed write\n");
+	// 		exit(EXIT_FAILURE);
+	// 	}
+	// 	printf("Sent %ld bytes to server\n", len);
+
+	// 	// nread = read(sfd, buf, BUF_SIZE); // COMMENTED OUT FOR INSTRUCTIONS AT END OF NUMBER 11
+	// 	// if (nread == -1) {
+	// 	// 	perror("read");
+	// 	// 	exit(EXIT_FAILURE);
+	// 	// }
+
+	// 	// printf("Received %zd bytes: %s\n", nread, buf);
+	// }
 
 	exit(EXIT_SUCCESS);
 }
