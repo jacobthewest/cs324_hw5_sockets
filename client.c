@@ -84,21 +84,51 @@ int main(int argc, char *argv[]) {
     // reads (using fread()) input from stdin into a buffer (char []) until EOF is reached (max total bytes 4096);
     // makes note of how many bytes were received from stdin and stored in the buffer
 
-    int MAX_TOTAL_BYTES = 4096;
-    char buffer[MAX_TOTAL_BYTES];
+    int MAX_TOTAL_BYTES_WRITE = 4096;
+    char writeBuffer[MAX_TOTAL_BYTES_WRITE];
     int numBytesToWrite = 0;
     
     // fread returns a size_t representing the number of elements read successfully.
-    numBytesToWrite = fread(buffer, sizeof(char), MAX_TOTAL_BYTES, stdin);
+    numBytesToWrite = fread(writeBuffer, sizeof(char), MAX_TOTAL_BYTES_WRITE, stdin);
 
     int bytesWritten = 0;
     int temp;
-    while((temp = write(sfd, &buffer[0] + bytesWritten, (numBytesToWrite - bytesWritten))) > 0) {
+    while((temp = write(sfd, &writeBuffer[0] + bytesWritten, (numBytesToWrite - bytesWritten))) > 0) {
         bytesWritten += temp;
         if(bytesWritten >= numBytesToWrite) {
             break;
         }
     }
+
+    // -- START #13 CODE -- //
+
+    // read all the data from the socket into a buffer.  You can experiment with different values of read() 
+    // length, but 512 should work just fine.  The maximum total size of the content that you will receive is 16384 bytes.
+    int MAX_TOTAL_BYTES_READ = 16384;
+    char readBuffer[MAX_TOTAL_BYTES_READ];
+    int numBytesToRead = 0;
+
+    int bytesRead = 0;
+    temp = 0;
+    while((temp = read(sfd, &readBuffer[0] + bytesRead, 512)) != 0){
+        bytesRead += temp;
+        if(bytesRead >= MAX_TOTAL_BYTES_READ) {
+            break;
+        }
+    }
+    
+    // The data you have read is not guaranteed to be null-terminated, so after all the content has been read, 
+    // if you want to use it with printf(), you should add the null termination yourself (i.e., at the index 
+    // indicated by the total bytes read).
+    readBuffer[bytesRead] = '\0'; // Null terminator.
+
+    // - after all the data has been read from the socket, you write the contents of the buffer to stdout.  
+    // Just like when you were communicating with your own server, the HTTP server you are communicating with 
+    // will close the connection when it is done sending data.  When this happens, recv() returns 0, for EOF.
+    write(1, readBuffer, bytesRead);
+
+
+    // -- END #13 CODE -- //
 
     // ----- END PART THREE CODE ----- //
 
@@ -133,3 +163,4 @@ int main(int argc, char *argv[]) {
 
 	exit(EXIT_SUCCESS);
 }
+
