@@ -83,20 +83,21 @@ int main(int argc, char *argv[]) {
 
     // reads (using fread()) input from stdin into a buffer (char []) until EOF is reached (max total bytes 4096);
     // makes note of how many bytes were received from stdin and stored in the buffer
-    fprintf(stdout, "Made it here");
-    fflush(stdout);
-    int MAX_TOTAL_BYTES = 4096;
-    char buffer[BUF_SIZE];
-    int numBytesToWrite;
-    if((numBytesToWrite = fread(buffer, sizeof(char), MAX_TOTAL_BYTES, stdin)) < 0) {
-		fprintf(stderr, "Could not fread() from stdin\n");
-		exit(EXIT_FAILURE);
-    }
 
-    int BYTES_COUNT = 4; // Idk, I just picked a number that seemed manageable.
+    int MAX_TOTAL_BYTES = 4096;
+    char buffer[MAX_TOTAL_BYTES];
+    int numBytesToWrite = 0;
+    
+    // fread returns a size_t representing the number of elements read successfully.
+    numBytesToWrite = fread(buffer, sizeof(char), MAX_TOTAL_BYTES, stdin);
+
     int bytesWritten = 0;
-    while(bytesWritten < numBytesToWrite) {
-        bytesWritten += write(sfd, (buffer + bytesWritten), BYTES_COUNT);
+    int temp;
+    while((temp = write(sfd, &buffer[0] + bytesWritten, (numBytesToWrite - bytesWritten))) > 0) {
+        bytesWritten += temp;
+        if(bytesWritten >= numBytesToWrite) {
+            break;
+        }
     }
 
     // ----- END PART THREE CODE ----- //
